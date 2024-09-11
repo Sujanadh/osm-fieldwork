@@ -15,8 +15,6 @@
 #     along with osm-fieldwork.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
-version: "3"
-
 networks:
   net:
     name: osm-fieldwork
@@ -29,7 +27,7 @@ services:
     container_name: osm-fieldwork
     volumes:
       # Mount local package
-      - ./osm_fieldwork:/root/.local/lib/python3.10/site-packages/osm_fieldwork
+      - ./osm_fieldwork:/usr/local/lib/python3.10/site-packages/osm_fieldwork
       # Mount local tests
       - ./tests:/data/tests
     depends_on:
@@ -70,7 +68,7 @@ services:
     restart: "unless-stopped"
 
   central:
-    image: "ghcr.io/hotosm/fmtm/odkcentral:v2023.5.0"
+    image: "ghcr.io/hotosm/fmtm/odkcentral:v2024.1.0"
     depends_on:
       central-db:
         condition: service_healthy

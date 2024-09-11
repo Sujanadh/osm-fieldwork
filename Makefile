@@ -18,7 +18,7 @@
 
 PACKAGE := org.osm_fieldwork.py
 NAME := osm-fieldwork
-VERSION := 0.4.2
+VERSION := 0.15.0
 
 # All python source files
 FILES := $(wildcard ./osm_fieldwork/*.py)
@@ -31,7 +31,6 @@ MDS := \
 	docs/about/externaldata.md \
 	docs/about/make_data_extract.md \
 	docs/about/xlsforms.md \
-	docs/about/odk_merge.md \
 	docs/about/convert.md \
 	docs/about/odk_client.md \
 	docs/about/osmfile.md

@@ -1,3 +1,299 @@
+## 0.15.0 (2024-08-27)
+
+### Feat
+
+- function to append mandatory fields into fmtm custom xls form (#289)
+- created a function to get submission photo by its submission id (#284)
+
+### Fix
+
+- Fix writing nodes with no tags, ie... what the way references, and only write the note for ways (#290)
+- don't add the note about duplication, that should be done at a higher level (#287)
+
+## 0.14.3 (2024-08-08)
+
+### Fix
+
+- regex pattern to find spaces in placeholders of tms url (#283)
+
+## 0.14.2 (2024-08-05)
+
+### Refactor
+
+- check if place holders in custom tms url contains any space within (#281)
+
+## 0.14.1 (2024-07-30)
+
+### Fix
+
+- generating pmtiles with different file extensions, update XLSForm ordering (#278)
+- improve validation for OdkDataset.createDataset properties
+
+### Refactor
+
+- clarify in logs the projectId is for ODK
+
+## 0.14.0 (2024-07-29)
+
+### Feat
+
+- endpoint to create dataset and bulk upload entities (#276)
+- add support for moving tiles (#272)
+
+### Fix
+
+- Add support for ways when importing an OSM XML file (#275)
+- Fix typo, usfs not usgs, add quering the relations table (#274)
+
+## 0.13.0 (2024-07-12)
+
+### Fix
+
+- update xlsforms to hide required choices tab values
+- add minzoom and maxzoom params to basemapper to allow view past zoom 18 (#267)
+- self.data is now a list to be consistent with the other parsers (#264)
+
+### Refactor
+
+- delete unused scripts and update the docs (#269)
+- remove test_conflation prior to odk_merge drop
+
+## 0.12.4 (2024-06-20)
+
+### Fix
+
+- final fix to xlsforms, remove 'essential' group for entity by intent
+
+## 0.12.3 (2024-06-20)
+
+### Fix
+
+- bug where task_id filter did not work on xlsforms
+
+## 0.12.2 (2024-06-20)
+
+### Fix
+
+- xlsform separate task_filter and task_id fields
+
+## 0.12.1 (2024-06-19)
+
+### Fix
+
+- update entity xlsforms with working save_to field for status
+- json2osm invalid merge, fix syntax
+
+## 0.12.0 (2024-06-19)
+
+### Feat
+
+- in memory BytesIO GeoJSON for boundary param basemapper (#261)
+
+### Fix
+
+- remove groups from xlsforms (essential, verification), entity breakage
+
+## 0.11.2 (2024-06-10)
+
+### Fix
+
+- make digitization_correct question mandatory
+
+## 0.11.1 (2024-06-07)
+
+### Fix
+
+- rename healthcare.xls form to health.xls (osm tag = healthcare)
+- bug in CSVDump where parsing fails if value is None
+
+## 0.11.0 (2024-06-05)
+
+### Feat
+
+- update buildings xlsform & add healthcare entity form
+- add support for select_multiple in XLSForms (#257)
+
+### Fix
+
+- improve Amenities XLSForm & data model (#256)
+
+## 0.10.2 (2024-05-24)
+
+### Fix
+
+- add support to optionally append to the mbtiles file (#255)
+
+## 0.10.1 (2024-05-24)
+
+### Fix
+
+- replace entity buildings.xls to allow top level entity loading
+
+## 0.10.0 (2024-05-22)
+
+### Feat
+
+- add support for geotrace (#254)
+
+### Fix
+
+- tile id extraction for pmtiles correct x/y ordering
+
+## 0.9.2 (2024-04-29)
+
+### Fix
+
+- remove notes column from entities sheet (pyxform error)
+
+## 0.9.1 (2024-04-26)
+
+### Fix
+
+- update buildings form, show all features unless task selected
+
+## 0.9.0 (2024-04-23)
+
+### Feat
+
+- create new entities-based xlsforms for registration/buildings
+
+### Refactor
+
+- move existing xlsforms to archived dir (replace with entities)
+
+## 0.8.2 (2024-04-19)
+
+### Fix
+
+- add error handling if connecting to OdkCentral fails
+- improve handling if entities fail during bulk upload
+
+## 0.8.1 (2024-04-15)
+
+### Fix
+
+- add missing OdkEntity.getEntity method for get by uuid
+
+## 0.8.0 (2024-04-12)
+
+### Feat
+
+- support odata filters for OdkEntity.getEntityData
+- add OdkEntity.getEntityCount method to get total entities
+
+### Refactor
+
+- improve typing, docstrings, logging for OdkCentralAsync
+- update logging during OdkCentral.OdkForm form creation
+
+## 0.7.2 (2024-04-11)
+
+### Fix
+
+- revert broken basemapper.py and tests
+
+## 0.7.1 (2024-04-11)
+
+### Fix
+
+- update entities registration form to include status field
+- remove usage of requests from validate.py in prep for dep removal
+
+### Refactor
+
+- remove missed print statements from OdkCentralAsync
+
+## 0.7.0 (2024-04-03)
+
+### Feat
+
+- add OdkCentralAsync for async entities workflow (#253)
+
+### Fix
+
+- only get cpu cores in getAllSubmissions method
+
+## 0.6.1 (2024-03-25)
+
+### Fix
+
+- add standardised entity registration form
+
+## 0.6.0 (2024-03-24)
+
+### Feat
+
+- v1 entities implementation in OdkCentral.py (#245)
+
+### Refactor
+
+- use logger.basicConfig for verbose flag (#244)
+
+## 0.5.4 (2024-03-19)
+
+### Fix
+
+- updated the error message for invalid odk-credentials (#241)
+- method to update review state of submission (#236)
+
+## 0.5.3 (2024-03-05)
+
+### Fix
+
+- **odk**: upload media failing validation if extension stripped accidentally
+- argparse parsing of bbox string
+- default outdir to current working dir
+- optional bbox as space separated and comma separated
+- add correct typing for bbox var and return types
+
+## 0.5.2 (2024-03-04)
+
+### Fix
+
+- **regression**: upload Media uploading test data instead of real data
+
+## 0.5.1 (2024-02-29)
+
+### Fix
+
+- rename form_fields --> formFields and handle all http errors (#230)
+
+## 0.5.0 (2024-02-28)
+
+### Feat
+
+- add media upload filename validation against xform
+- allow passing bytesio object for createForm & uploadMedia
+- add media upload filename validation against xform
+- allow passing bytesio object for createForm & uploadMedia
+
+### Fix
+
+- minor fixes to OdkForm
+- mediaUpload for xform geojson
+- return form name regardless of if exists or not
+- minor fixes to OdkForm
+- mediaUpload for xform geojson
+- return form name regardless of if exists or not
+
+## 0.4.4 (2024-02-26)
+
+### Fix
+
+- do not index xform path for form name
+
+## 0.4.3 (2024-02-26)
+
+### Fix
+
+- more flexible parsing of xform name for uploadMedia
+
+## 0.4.3rc0 (2024-02-13)
+
+### Fix
+
+- error handling in submission downloadThread (#227)
+
 ## 0.4.2 (2024-01-30)
 
 ### Fix

@@ -4,12 +4,12 @@
 #
 # This file is part of osm_fieldwork.
 #
-#     Underpass is free software: you can redistribute it and/or modify
+#     osm-fieldwork is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     Underpass is distributed in the hope that it will be useful,
+#     osm-fieldwork is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
@@ -26,13 +26,9 @@ from osm_fieldwork.yamlfile import YamlFile
 
 log = logging.getLogger(__name__)
 
-parser = argparse.ArgumentParser(description="Read and parse a YAML file")
-parser.add_argument("--infile", help="The YAML input file")
-args = parser.parse_args()
-
 path = xlsforms_path.replace("/xlsforms", "")
-infile = f"{path}/xforms.yaml"
-data = YamlFile(infile)
+# FIXME use fixture
+data = YamlFile(f"{path}/xforms.yaml")
 # data.dump()
 
 
@@ -86,6 +82,10 @@ def test_ignore():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Read and parse a YAML file")
+    parser.add_argument("--infile", help="The YAML input file")
+    args = parser.parse_args()
+
     test_load()
     test_good()
     test_private()

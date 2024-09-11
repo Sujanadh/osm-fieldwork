@@ -5,7 +5,7 @@
   <img src="https://github.com/hotosm/fmtm/blob/main/images/hot_logo.png?raw=true" style="width: 200px;" alt="HOT"></a>
 </p>
 <p align="center">
-  <em>Processing field data from OpenDataKit to OpenStreetMap format, and other field utils.</em>
+  <em>Processing field data from ODK to OpenStreetMap format, and other field utils.</em>
 </p>
 <p align="center">
   <a href="https://github.com/hotosm/osm-fieldwork/actions/workflows/build.yml" target="_blank">
@@ -71,7 +71,7 @@ improved the fire district maps, he expanded his efforts to map the remote
 regions of Colorado and a few neighboring states, proving invaluable
 during large wildland fires. Ground-truthing became an integral part of
 his work, conducted using mobile devices in the field. To streamline the
-data collection process, Rob heavily relied on OpenDataKit and eventually
+data collection process, Rob heavily relied on ODK and eventually
 created additional software to facilitate data processing, which had
 previously been time-consuming and tedious. Now, transferring data
 seamlessly from his phone to OSM requires minimal effort. To this day,
@@ -81,7 +81,7 @@ enhancing the software used in the project.
 ## About OSM Fieldwork
 
 Osm-Fieldwork is a project for processing data collection using
-OpenDataKit into OpenStreetMap format. It includes several utility
+ODK into OpenStreetMap format. It includes several utility
 programs that automate part of the data flow like creating satellite
 imagery basemaps and data extracts from
 [OpenStreetMap](https://www.openstreetmap.org) so they can be
@@ -186,7 +186,7 @@ file. This is just a short overview.
 
 This program converts the data collected from ODK Collect into
 the proper OpenStreetMap tagging schema. The conversion is controlled
-by an
+by a
 [YAML](https://github.com/hotosm/osm-fieldwork/blob/main/osm-fieldwork/xforms.yaml)
 file, so easy to modify for other projects. The output are two files,
 one is suitable for OSM,and is in OSM XML format. The other
@@ -226,12 +226,6 @@ converts the ODK XML format on your mobile device into the same CSV
 format used for submissions downloaded from [ODK
 Central](https://docs.getodk.org/central-intro/), or the JSON format
 also from Central.
-
-### odk_merge.py
-
-This program conflates the data collected by ODK Collect with the
-existing OSM data. The output of this file can be loaded into JOSM
-for validation and uploading to OpenStreetMap.
 
 ### odk_client.py
 
@@ -279,7 +273,7 @@ For more info visit the
 
 By following these best practices and using the utility programs
 included with Osm-Fieldwork, you can effectively process data collection
-from OpenDataKit into OpenStreetMap format. However, please note that
+from ODK into OpenStreetMap format. However, please note that
 while Osm-Fieldwork has been tested and used in various projects, it is
 still in active development and may have limitations or issues that
 need to be resolved.
@@ -340,7 +334,7 @@ Osm-Fieldwork, you can streamline your data collection process and ensure
 the quality of your data.
 
 Osm-Fieldwork is a powerful tool for processing data collection from
-OpenDataKit into OpenStreetMap format. By following the best practices
+ODK into OpenStreetMap format. By following the best practices
 outlined in this documentation and using the utility programs included
 with Osm-Fieldwork, you can streamline your data collection process and
 ensure the quality of your converted data. If you have any questions

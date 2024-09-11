@@ -106,12 +106,14 @@ class DataFile(object):
         self,
         dbname: str = None,
         suffix: str = "jpg",
+        append: bool = False,
     ):
         """Handle the sqlite3 database file.
 
         Args:
             dbname (str): The name of the output sqlite file
             suffix (str): The image suffix, jpg or png usually
+            append (bool): Whether to append to or create the database
 
         Returns:
             (DataFile): An instance of this class
@@ -119,7 +121,7 @@ class DataFile(object):
         self.db = None
         self.cursor = None
         if dbname:
-            self.createDB(dbname)
+            self.createDB(dbname, append)
         self.dbname = dbname
         self.metadata = None
         self.toplevel = None
@@ -127,7 +129,7 @@ class DataFile(object):
 
     def addBounds(
         self,
-        bounds: int,
+        bounds: tuple[float, float, float, float],
     ):
         """Mbtiles has a bounds field, Osmand doesn't.
 
@@ -136,13 +138,26 @@ class DataFile(object):
         """
         entry = str(bounds)
         entry = entry[1 : len(entry) - 1].replace(" ", "")
-        self.cursor.execute(f"INSERT INTO metadata (name, value) VALUES('bounds', '{entry}')")
-        # self.cursor.execute(f"INSERT INTO metadata (name, value) VALUES('minzoom', '9')")
-        # self.cursor.execute(f"INSERT INTO metadata (name, value) VALUES('maxzoom', '15')")
+        self.cursor.execute(f"INSERT OR IGNORE INTO metadata (name, value) VALUES('bounds', '{entry}') ")
+
+    def addZoomLevels(
+        self,
+        zoom_levels: list[int],
+    ):
+        """Mbtiles has a maxzoom and minzoom fields, Osmand doesn't.
+
+        Args:
+            bounds (int): The bounds value for ODK Collect mbtiles
+        """
+        min_zoom = min(zoom_levels)
+        max_zoom = max(zoom_levels)
+        self.cursor.execute(f"INSERT OR IGNORE INTO metadata (name, value) VALUES('minzoom', '{min_zoom}') ")
+        self.cursor.execute(f"INSERT OR IGNORE INTO metadata (name, value) VALUES('maxzoom', '{max_zoom}') ")
 
     def createDB(
         self,
         dbname: str,
+        append: bool = False,
     ):
         """Create and sqlitedb in either mbtiles or Osman sqlitedb format.
 
@@ -151,11 +166,17 @@ class DataFile(object):
         """
         suffix = os.path.splitext(dbname)[1]
 
-        if os.path.exists(dbname):
+        if os.path.exists(dbname) and append == False:
             os.remove(dbname)
 
         self.db = sqlite3.connect(dbname)
         self.cursor = self.db.cursor()
+        self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='tiles'")
+        exists = self.cursor.fetchone()
+        if exists and append:
+            logging.info("Appending to database file %s" % dbname)
+            return
+
         if suffix == ".mbtiles":
             self.cursor.execute("CREATE TABLE tiles (zoom_level integer, tile_column integer, tile_row integer, tile_data blob)")
             self.cursor.execute("CREATE INDEX tiles_idx on tiles (zoom_level, tile_column, tile_row)")
@@ -182,11 +203,7 @@ class DataFile(object):
         self.db.commit()
         logging.info("Created database file %s" % dbname)
 
-    def writeTiles(
-        self,
-        tiles: list,
-        base: str = "./",
-    ):
+    def writeTiles(self, tiles: list, base: str = "./", image_format: str = "jpg"):
         """Write map tiles into the to the map tile cache.
 
         Args:
@@ -194,7 +211,7 @@ class DataFile(object):
             base (str): The default local to write tiles to disk
         """
         for tile in tiles:
-            xyz = MapTile(tile=tile)
+            xyz = MapTile(tile=tile, suffix=image_format)
             xyz.readImage(base)
             # xyz.dump()
             self.writeTile(xyz)
@@ -243,12 +260,12 @@ if __name__ == "__main__":
 
     # if verbose, dump to the terminal.
     if args.verbose is not None:
-        log.setLevel(logging.DEBUG)
-        ch = logging.StreamHandler(sys.stdout)
-        ch.setLevel(logging.DEBUG)
-        formatter = logging.Formatter("%(threadName)10s - %(name)s - %(levelname)s - %(message)s")
-        ch.setFormatter(formatter)
-        log.addHandler(ch)
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format=("%(threadName)10s - %(name)s - %(levelname)s - %(message)s"),
+            datefmt="%y-%m-%d %H:%M:%S",
+            stream=sys.stdout,
+        )
 
     outfile = DataFile(args.database, "jpg")
     toplevel = "/var/www/html/topotiles/"

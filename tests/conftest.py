@@ -20,11 +20,12 @@
 import logging
 import sys
 import uuid
+from pathlib import Path
 
 import pytest
 
-# from pyxform.xls2xform import xls2xform_convert
 from osm_fieldwork.OdkCentral import OdkAppUser, OdkForm, OdkProject
+from osm_fieldwork.OdkCentralAsync import OdkDataset
 
 logging.basicConfig(
     level="DEBUG",
@@ -32,6 +33,8 @@ logging.basicConfig(
     datefmt="%y-%m-%d %H:%M:%S",
     stream=sys.stdout,
 )
+
+testdata_dir = Path(__file__).parent / "testdata"
 
 
 # from sqlalchemy import create_engine
@@ -89,13 +92,13 @@ logging.basicConfig(
 #     return response.json().get("token")
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def project():
     """Get persistent ODK Central requests session."""
     return OdkProject("https://proxy", "test@hotosm.org", "Password1234")
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def project_details(project):
     """Get persistent ODK Central requests session."""
     return project.createProject("test project")
@@ -117,20 +120,116 @@ def appuser_details(appuser, project_details):
     appuser_name = f"test_appuser_{uuid.uuid4()}"
     response = appuser.create(project_details.get("id"), appuser_name)
 
-    assert response.get("projectId") == 1
     assert response.get("displayName") == appuser_name
 
     return response
 
 
 @pytest.fixture(scope="function")
-def xform():
+def odk_form(project_details) -> tuple:
     """Get appuser for a project."""
-    return OdkForm(
+    odk_id = project_details.get("id")
+    form = OdkForm(
         url="https://proxy",
         user="test@hotosm.org",
         passwd="Password1234",
     )
+    return odk_id, form
+
+
+@pytest.fixture(scope="function")
+def odk_form_cleanup(odk_form):
+    """Get xform for project, with automatic cleanup after."""
+    odk_id, xform = odk_form
+    test_xform = testdata_dir / "buildings.xml"
+
+    form_name = xform.createForm(odk_id, str(test_xform))
+    assert form_name == "test_form"
+
+    # Before yield is used in tests
+    yield odk_id, form_name, xform
+    # After yield is test cleanup
+
+    success = xform.deleteForm(odk_id, form_name)
+    assert success
+
+
+@pytest.fixture(scope="session")
+async def odk_dataset(project_details) -> tuple:
+    """Get dataset (entity list) for a project."""
+    odk_id = project_details.get("id")
+    dataset = OdkDataset(
+        url="https://proxy",
+        user="test@hotosm.org",
+        passwd="Password1234",
+    )
+
+    # Create the dataset
+    async with dataset as odk_dataset:
+        created_dataset = await odk_dataset.createDataset(
+            odk_id,
+            "features",
+            [
+                "geometry",
+                "project_id",
+                "task_id",
+                "osm_id",
+                "tags",
+                "version",
+                "changeset",
+                "timestamp",
+                "status",
+            ],
+        )
+        assert created_dataset.get("name") == "features"
+        assert sorted(created_dataset.get("properties", [])) == sorted(
+            [
+                "geometry",
+                "project_id",
+                "task_id",
+                "osm_id",
+                "tags",
+                "version",
+                "changeset",
+                "timestamp",
+                "status",
+            ]
+        )
+
+    return odk_id, dataset
+
+
+@pytest.fixture(scope="session")
+async def odk_dataset_cleanup(odk_dataset):
+    """Get Dataset for project, with automatic cleanup after."""
+    odk_id, dataset = odk_dataset
+
+    dataset_name = "features"
+    async with dataset as odk_dataset:
+        entity_json = await odk_dataset.createEntity(odk_id, dataset_name, "test entity", {"osm_id": "1", "geometry": "test"})
+    entity_uuid = entity_json.get("uuid")
+
+    # Before yield is used in tests
+    yield odk_id, dataset_name, entity_uuid, dataset
+    # After yield is test cleanup
+
+    async with dataset as odk_dataset:
+        entity_deleted = await odk_dataset.deleteEntity(odk_id, dataset_name, entity_uuid)
+        assert entity_deleted
+
+
+@pytest.fixture(scope="session", autouse=True)
+def cleanup():
+    """Cleanup projects and forms after all tests (session)."""
+    project = OdkProject(
+        url="https://proxy",
+        user="test@hotosm.org",
+        passwd="Password1234",
+    )
+
+    for item in project.listProjects():
+        project_id = item.get("id")
+        project.deleteProject(project_id)
 
 
 # @pytest.fixture(scope="function")
@@ -139,6 +238,6 @@ def xform():
 #     xlsform = xls2xform_convert(buildings)
 #     response = xform.createForm(
 #         projectId=project_details.get("id"),
-#         xform="1",
 #         filespec=xlsform,
+#         xform="1",
 #     )

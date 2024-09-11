@@ -9,7 +9,7 @@
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     Underpass is distributed in the hope that it will be useful,
+#     osm-fieldwork is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
@@ -164,12 +164,12 @@ if __name__ == "__main__":
 
     # if verbose, dump to the terminal.
     if args.verbose is not None:
-        log.setLevel(logging.DEBUG)
-        ch = logging.StreamHandler(sys.stdout)
-        ch.setLevel(logging.DEBUG)
-        formatter = logging.Formatter("%(threadName)10s - %(name)s - %(levelname)s - %(message)s")
-        ch.setFormatter(formatter)
-        log.addHandler(ch)
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format=("%(threadName)10s - %(name)s - %(levelname)s - %(message)s"),
+            datefmt="%y-%m-%d %H:%M:%S",
+            stream=sys.stdout,
+        )
 
     yaml1 = YamlFile(args.infile)
     yaml1.dump()

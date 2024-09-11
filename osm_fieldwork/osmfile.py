@@ -19,6 +19,7 @@
 import argparse
 import logging
 import os
+import sys
 from datetime import datetime
 from sys import argv
 
@@ -26,7 +27,7 @@ import xmltodict
 
 from osm_fieldwork.convert import Convert, escape
 
-# Intantiate logger
+# Instantiate logger
 log = logging.getLogger(__name__)
 
 
@@ -76,11 +77,11 @@ class OsmFile(object):
         self.start = -1
         # path = xlsforms_path.replace("xlsforms", "")
         self.convert = Convert()
-        self.data = dict()
+        self.data = list()
 
     def __del__(self):
         """Close the OSM XML file automatically."""
-        log.debug("Closing output file")
+        # log.debug("Closing output file")
         self.footer()
 
     def isclosed(self):
@@ -107,6 +108,7 @@ class OsmFile(object):
             self.file.flush()
             if self.file is False:
                 self.file.close()
+        self.file = None
 
     def write(
         self,
@@ -152,7 +154,7 @@ class OsmFile(object):
         if "version" not in way["attrs"]:
             attrs["version"] = 1
         else:
-            attrs["version"] = way["attrs"]["version"] + 1
+            attrs["version"] = way["attrs"]["version"]
         attrs["timestamp"] = datetime.now().strftime("%Y-%m-%dT%TZ")
         # If the resulting file is publicly accessible without authentication, The GDPR applies
         # and the identifying fields should not be included
@@ -210,10 +212,9 @@ class OsmFile(object):
                     newkey = escape(key)
                     newval = escape(str(value))
                     osm += f"\n    <tag k='{newkey}' v='{newval}'/>"
-            if modified and key != "note":
+            if modified:
                 osm += '\n    <tag k="note" v="Do not upload this without validation!"/>'
             osm += "\n"
-
         osm += "  </way>\n"
 
         return osm
@@ -300,8 +301,6 @@ class OsmFile(object):
                     newkey = escape(key)
                     newval = escape(str(value))
                     osm += f"\n    <tag k='{newkey}' v='{newval}'/>"
-            if modified and key != "note":
-                osm += '\n    <tag k="note" v="Do not upload this without validation!"/>'
             osm += "\n  </node>\n"
         else:
             osm += "/>"
@@ -351,53 +350,62 @@ class OsmFile(object):
         """
         size = os.path.getsize(osmfile)
         with open(osmfile, "r") as file:
-            xml = file.read(size)  # Instances are small, read the whole file
+            xml = file.read(size)
             doc = xmltodict.parse(xml)
             if "osm" not in doc:
                 logging.warning("No data in this instance")
                 return False
-            field = doc["osm"]
-
-            if "node" not in field:
+            data = doc["osm"]
+            if "node" not in data:
                 logging.warning("No nodes in this instance")
                 return False
 
-        if type(field["node"]) == dict:
-            attrs = dict()
+        for node in data["node"]:
+            attrs = {
+                "id": int(node["@id"]),
+                "lat": node["@lat"][:10],
+                "lon": node["@lon"][:10],
+            }
+            if "@timestamp" in node:
+                attrs["timestamp"] = node["@timestamp"]
+
             tags = dict()
-            for k, v in field["node"].items():
-                if k[0] == "@":
-                    attrs[k[1:]] = v
-                else:
-                    if type(field["node"]["tag"]) == dict:
-                        tags[field["node"]["tag"]["@k"]] = field["node"]["tag"]["@v"].strip()
+            if "tag" in node:
+                for tag in node["tag"]:
+                    if type(tag) == dict:
+                        tags[tag["@k"]] = tag["@v"].strip()
+                        # continue
                     else:
-                        for pair in field["node"]["tag"]:
-                            tags[pair["@k"]] = pair["@v"]
-
+                        tags[node["tag"]["@k"]] = node["tag"]["@v"].strip()
+                    # continue
             node = {"attrs": attrs, "tags": tags}
-            self.data[node["attrs"]["id"]] = node
-        else:
-            for node in field["node"]:
-                attrs = {
-                    "id": int(node["@id"]),
-                    "lat": node["@lat"][:10],
-                    "lon": node["@lon"][:10],
-                }
-                if "@timestamp" in node:
-                    attrs["timestamp"] = node["@timestamp"]
+            self.data.append(node)
 
-                tags = dict()
-                if "tag" in node:
-                    for tag in node["tag"]:
-                        if type(tag) == dict:
-                            tags[tag["@k"]] = tag["@v"].strip()
-                            # continue
-                        else:
-                            tags[node["tag"]["@k"]] = node["tag"]["@v"].strip()
-                            # continue
-                    node = {"attrs": attrs, "tags": tags}
-                    self.data[node["attrs"]["id"]] = node
+        for way in data["way"]:
+            attrs = {
+                "id": int(way["@id"]),
+            }
+            refs = list()
+            if len(way["nd"]) > 0:
+                for ref in way["nd"]:
+                    refs.append(int(ref["@ref"]))
+
+            if "@timestamp" in node:
+                attrs["timestamp"] = node["@timestamp"]
+
+            tags = dict()
+            if "tag" in way:
+                for tag in way["tag"]:
+                    if type(tag) == dict:
+                        tags[tag["@k"]] = tag["@v"].strip()
+                        # continue
+                    else:
+                        if len(node["tags"]) > 0:
+                            tags[node["tags"]["@k"]] = node["tags"]["@v"].strip()
+                    # continue
+            way = {"attrs": attrs, "refs": refs, "tags": tags}
+            self.data.append(way)
+
         return self.data
 
     def dump(self):
@@ -448,12 +456,12 @@ if __name__ == "__main__":
 
     # if verbose, dump to the terminal.
     if args.verbose is not None:
-        log.setLevel(logging.DEBUG)
-        ch = logging.StreamHandler(sys.stdout)
-        ch.setLevel(logging.DEBUG)
-        formatter = logging.Formatter("%(threadName)10s - %(name)s - %(levelname)s - %(message)s")
-        ch.setFormatter(formatter)
-        log.addHandler(ch)
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format=("%(threadName)10s - %(name)s - %(levelname)s - %(message)s"),
+            datefmt="%y-%m-%d %H:%M:%S",
+            stream=sys.stdout,
+        )
 
     osm = OsmFile()
     osm.loadFile(args.osmfile)
